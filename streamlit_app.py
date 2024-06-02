@@ -11,7 +11,7 @@ import zipfile
 
 # Page title
 st.set_page_config(page_title='ScriptScore.AI', page_icon='🎥')
-st.title('🤖 Audience Sentiment Prediction')
+st.title('🤖 Predictive Audience Intelligence')
 
 with st.expander('About this plartform', expanded=True):
   st.markdown('**What can this app do?**')
