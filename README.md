@@ -1,3 +1,6 @@
+# Run
+`streamlit run streamlit_app.py`
+
 # 📦 Streamlit App Starter Kit 
 ```
 ⬆️ (Replace above with your app's name)
