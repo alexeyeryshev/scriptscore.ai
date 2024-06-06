@@ -1,0 +1,63 @@
+{
+  "age": [
+    {
+      "category": "Teens",
+      "start": 13,
+      "end": 19
+    },
+    {
+      "category": "Young Adults",
+      "start": 20,
+      "end": 35
+    },
+    {
+      "category": "Adults",
+      "start": 35,
+      "end": 50
+    },
+    {
+      "category": "Seniors",
+      "start": 51,
+      "end": 70
+    }
+  ],
+  "genders": ["Female", "Male", "Non-binary"],
+  "ethnicities": [
+    "Hispanic/Latino",
+    "Caucasian",
+    "Asian",
+    "African American",
+    "Mixed race",
+    "Native American"
+  ],
+  "locations": [
+    "North America",
+    "Europe",
+    "Asia",
+    "South America",
+    "Africa",
+    "Oceania"
+  ],
+  "professionalBackgrounds": [
+    "Blogger",
+    "Professional Critic",
+    "Film Student",
+    "Casual Moviegoer",
+    "YouTuber",
+    "Industry Professional",
+    "IT Professional",
+    "Marketing Professional",
+    "Teacher",
+    "Medical Professional",
+    "Literature Teacher",
+    "History Teacher"
+  ],
+  "educations": [
+    "High School",
+    "Bachelor's Degree",
+    "Master's Degree",
+    "Doctorate",
+    "Self-taught"
+  ],
+  "incomeLevels": ["Low Income", "Middle Income", "High Income"]
+}
