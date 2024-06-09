@@ -68,7 +68,16 @@ if simulation_id := st.session_state.get('simulation'):
     reviews['ageRange'] = reviews['ageStart'].astype(str) + '-' + reviews['ageEnd'].astype(str)
     st.subheader("", divider='rainbow')
     st.subheader(simulation['name'].item())
-    st.write(simulation['synopsis'].item())
+    poster = simulation['poster'].item()
+    if poster:
+        col1, col2 = st.columns([0.3, 0.7])
+        with col1:
+            st.image(simulation['poster'].item(), use_column_width=True)
+        with col2:
+            st.write(simulation['synopsis'].item())
+    else:
+        st.write(simulation['synopsis'].item())
+
 
     # col1, col2 = st.columns(2)
     # with col1:
@@ -140,6 +149,7 @@ with st.sidebar:
 
     model = None
     with st.expander('Advanced configuraiton', expanded=False):
+        skip_poster_generation = st.checkbox('Skip poster generation', value=False)
         audience_size = st.number_input('Audience size', min_value=1, max_value=100, value=10)
         model = st.selectbox('Model', ['GPT-3.5', 'GPT-4.0'], index=0)
 
@@ -154,7 +164,7 @@ with st.sidebar:
         }
         model = openai_model_35 if model == 'GPT-3.5' else openai_model_4
         with conn.session as session:
-            simulation_id = simulate(model, openai_client, session, content, lambda x: progress.progress(x), {"how_many": audience_size})
+            simulation_id = simulate(model, openai_client, session, content, lambda x: progress.progress(x), {"how_many": audience_size, "skip_poster_generation": skip_poster_generation})
         st.session_state['simulation'] = simulation_id
         progress.empty()
 

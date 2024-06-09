@@ -171,6 +171,7 @@ def simulate(model, openai_client, con, content, on_simulate_tick, config):
     review_chain = full_prompt | model
     synopsis_chain = synopsis_prompt | model
     how_many = config["how_many"]
+    skip_poster_generation = config["skip_poster_generation"]
 
     with con:
         persona = next(random_persona_generator)
@@ -178,8 +179,10 @@ def simulate(model, openai_client, con, content, on_simulate_tick, config):
         synopsis = json.loads(ai_message.content)
         on_simulate_tick(1 / (how_many + 2))
 
-        poster_bytes = generate_poster(openai_client, synopsis)
-        on_simulate_tick(2 / (how_many + 2))
+        poster_bytes = None
+        if not skip_poster_generation:
+            poster_bytes = generate_poster(openai_client, synopsis)
+            on_simulate_tick(2 / (how_many + 2))
 
         simulation_id = create_simulation_in_db(con, content, synopsis, poster_bytes)
         review_ids = []
