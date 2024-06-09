@@ -8,6 +8,8 @@ import altair as alt
 import time
 import zipfile
 
+from simulation import simulate
+
 
 # Page title
 st.set_page_config(page_title='ScriptScore.AI', page_icon='🎥')
@@ -117,7 +119,8 @@ with st.sidebar:
     st.header('Budget')
     st.slider('Budget', 0, 500, 25, 1, format='$%dM', label_visibility='collapsed' )
 
-    st.button('🪄', use_container_width=True)
+
+    st.button('🪄', use_container_width=True, on_click=simulate)
 
     # # Download example data
     # @st.cache_data
