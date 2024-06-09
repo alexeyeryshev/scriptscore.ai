@@ -13,8 +13,6 @@ st.title('🤖 Predictive Audience Intelligence')
 # Meta
 OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
 conn = st.connection("local_db")
-openai_model_35 = ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo-1106", openai_api_key=OPENAI_API_KEY, model_kwargs={"response_format": {"type": "json_object"}},)
-openai_model_4 = ChatOpenAI(temperature=0, model_name="gpt-4o", openai_api_key=OPENAI_API_KEY, model_kwargs={"response_format": {"type": "json_object"}},)
 openai_client = OpenAI(api_key=OPENAI_API_KEY)
 
 with st.expander('About this plartform', expanded=False):
@@ -172,6 +170,7 @@ with st.sidebar:
         skip_poster_generation = st.checkbox('Skip poster generation', value=False)
         audience_size = st.number_input('Audience size', min_value=1, max_value=100, value=10)
         model = st.selectbox('Model', ['GPT-3.5', 'GPT-4.0'], index=0)
+        temperature = st.slider('Temperature', 0.0, 1.0, 0.5, 0.1)
 
     def run_simulation(model, openai_client):
         progress = st.progress(0)
@@ -182,6 +181,8 @@ with st.sidebar:
             "cast": cast,
             "budget": budget
         }
+        openai_model_35 = ChatOpenAI(temperature=temperature, model_name="gpt-3.5-turbo-1106", openai_api_key=OPENAI_API_KEY, model_kwargs={"response_format": {"type": "json_object"}},)
+        openai_model_4 = ChatOpenAI(temperature=temperature, model_name="gpt-4o", openai_api_key=OPENAI_API_KEY, model_kwargs={"response_format": {"type": "json_object"}},)
         model = openai_model_35 if model == 'GPT-3.5' else openai_model_4
         with conn.session as session:
             simulation_id = simulate(model, openai_client, session, content, lambda x: progress.progress(x), {"how_many": audience_size, "skip_poster_generation": skip_poster_generation})
