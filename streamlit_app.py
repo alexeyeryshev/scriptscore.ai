@@ -151,26 +151,6 @@ if simulation_id := st.session_state.get('simulation'):
     breakdown_char("income", "Income")
 
 
-    # with col2:
-    #     st.subheader('👍 Looking forward?')
-    #     st.metric('Looking forward to watch it?', f'{reviews["lookingForward"].value_counts().get(1, 0) * 100} %', label_visibility="collapsed")
-
-    #     looking_forward = reviews.groupby('ageRange')['lookingForward'].mean().reset_index()
-    #     chart = alt.Chart(looking_forward).mark_bar().encode(
-    #         x=alt.X('ageRange', sort=None, title='Age Range'),
-    #         y=alt.Y('lookingForward'),
-    #         tooltip=['ageRange', 'lookingForward']
-    #     ).properties(
-    #     )
-    #     st.altair_chart(chart)
-
-    # break down by age bar chart
-
-    # st.dataframe(reviews)
-
-# simulations = conn.query('SELECT * FROM simulations') 
-# st.dataframe(simulations)
-
 # Sidebar for accepting input parameters
 with st.sidebar:
     # Load data
