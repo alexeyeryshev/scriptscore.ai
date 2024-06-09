@@ -170,7 +170,7 @@ with st.sidebar:
         skip_poster_generation = st.checkbox('Skip poster generation', value=False)
         audience_size = st.number_input('Audience size', min_value=1, max_value=100, value=10)
         model = st.selectbox('Model', ['GPT-3.5', 'GPT-4.0'], index=0)
-        temperature = st.slider('Temperature', 0.0, 1.0, 0.5, 0.1)
+        temperature = st.slider('Temperature', 0.0, 1.0, 0.2, 0.1)
 
     def run_simulation(model, openai_client):
         progress = st.progress(0)
