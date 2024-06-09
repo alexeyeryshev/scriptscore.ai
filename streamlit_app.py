@@ -3,7 +3,8 @@ import streamlit as st
 import altair as alt
 from openai import OpenAI
 
-from simulation import bootstrap_db, simulate
+from simulation import simulate
+from db import bootstrap_db
 
 
 # Page title

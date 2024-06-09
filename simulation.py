@@ -1,10 +1,10 @@
 import json
 import random
-from sqlalchemy import text
 
-from langchain_core.prompts import PromptTemplate
 import requests
+from langchain_core.prompts import PromptTemplate
 
+from db import create_persona_in_db, create_review_in_db, create_simulation_in_db
 
 file_path = 'demography.json'
 demography = None
@@ -118,80 +118,6 @@ def generate_prompt_input(persona, content):
         **generate_content_prompt_input(content)
     }
 
-def bootstrap_db(con):
-    with con:
-        con.execute(text('''
-        CREATE TABLE IF NOT EXISTS simulations (
-            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-            name TEXT,
-            type TEXT,
-            cast TEXT,
-            budget REAL,
-            synopsis TEXT,
-            poster BLOB
-        )
-        '''))
-
-        con.execute(text('''
-        CREATE TABLE IF NOT EXISTS personas (
-            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-            ageStart INTEGER,
-            ageEnd INTEGER,
-            gender TEXT,
-            ethnicity TEXT,
-            location TEXT,
-            profession TEXT,
-            education TEXT,
-            income TEXT
-        )
-        '''))
-
-        con.execute(text('''
-        CREATE TABLE IF NOT EXISTS reviews (
-            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-            simulation INTEGER NOT NULL,
-            persona INTEGER NOT NULL,
-            source TEXT NOT NULL,
-            review TEXT,
-            rating REAL,
-            lookingForward INTEGER,
-            
-            FOREIGN KEY (simulation) REFERENCES simulations(ID)
-            FOREIGN KEY (persona) REFERENCES personas(ID)
-        )
-        '''))
-
-        con.commit()
-
-def create_simulation_in_db(con, content, synopsis, poster):
-    simulation = {
-        **content,
-        "cast": ",".join(content["cast"]),
-        "synopsis": synopsis["synopsis"],
-        "poster": poster, 
-    }
-    cursor = con.execute(text("INSERT INTO simulations VALUES(NULL, :name, :type, :cast, :budget, :synopsis, :poster);"), simulation)
-    return cursor.lastrowid
-
-def create_persona_in_db(con, persona):
-    data = generate_demography_prompt_input(persona)
-    cursor = con.execute(text("""
-        INSERT INTO personas VALUES (NULL, :ageStart, :ageEnd, :gender, :ethnicity, :location, :profession, :education, :income)
-    """), data)
-    return cursor.lastrowid
-
-def create_review_in_db(con, simulation, persona, review):
-    data = {
-        "simulation": simulation,
-        "persona": persona,
-        "source": json.dumps(review),
-        "review": review["review"],
-        "rating": review["rating"],
-        "lookingForward": review["lookingForward"],
-    }
-    cursor = con.execute(text("INSERT INTO reviews VALUES(NULL, :simulation, :persona, :source, :review, :rating, :lookingForward)"), data)
-    return cursor.lastrowid
-
 def generate_poster(openai_client, synopsis):
     post_generation_prompt_resolved = poster_generation_prompt.invoke(synopsis["synopsis"])
     image_response = openai_client.images.generate(
@@ -235,7 +161,7 @@ def simulate(model, openai_client, con, content, on_simulate_tick, config):
         for i in range(how_many):
             persona = next(random_persona_generator)
             print(persona)
-            persona_id = create_persona_in_db(con, persona)
+            persona_id = create_persona_in_db(con, generate_demography_prompt_input(persona))
             prompt_input = generate_prompt_input(persona, content)
             ai_message = review_chain.invoke(prompt_input)
             review = json.loads(ai_message.content)

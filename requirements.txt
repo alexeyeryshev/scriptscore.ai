@@ -5,3 +5,4 @@ altair>=4.0
 langchain
 langchain_openai
 sqlalchemy
+st-supabase-connection
