@@ -58,21 +58,32 @@ if simulation_id := st.session_state.get('simulation'):
     st.subheader('⭐ Average Rating')
     st.metric('Average Rating', reviews['rating'].mean(), label_visibility='collapsed')
 
-    age_rating = reviews.groupby('ageRange')['rating'].mean().reset_index()
-    chart = alt.Chart(age_rating).mark_bar(
-        cornerRadiusTopLeft=10,
-        cornerRadiusTopRight=10,
-        color='darkviolet'
-    ).encode(
-        x=alt.X('ageRange', sort=None, title='Age Range', ),
-        y=alt.Y('rating', title=''),
-        tooltip=['ageRange', 'rating']
-    ).properties(
-    ).configure_view(strokeOpacity=0).configure_axis(
-        grid=False,
-        labelAngle=0
-    )
-    st.altair_chart(chart, use_container_width=True)
+    def breakdown_char(dim, title):
+        age_rating = reviews.groupby(dim)['rating'].mean().reset_index()
+        chart = alt.Chart(age_rating).mark_bar(
+            cornerRadiusTopLeft=10,
+            cornerRadiusTopRight=10,
+            color='darkviolet'
+        ).encode(
+            x=alt.X(dim, sort=None, title=title, ),
+            y=alt.Y('rating', title=''),
+            tooltip=[dim, 'rating']
+        ).properties(
+            height=200
+        ).configure_view(strokeOpacity=0).configure_axis(
+            grid=False,
+            labelAngle=0
+        )
+        st.altair_chart(chart, use_container_width=True)
+    
+
+    breakdown_char("ageRange", "Age Range")
+    breakdown_char("ethnicity", "Ethnicity")
+    breakdown_char("gender", "Gender")
+    breakdown_char("profession", "Profession")
+    breakdown_char("education", "Education")
+    breakdown_char("income", "Income")
+
 
     # with col2:
     #     st.subheader('👍 Looking forward?')
@@ -89,7 +100,7 @@ if simulation_id := st.session_state.get('simulation'):
 
     # break down by age bar chart
 
-    st.dataframe(reviews)
+    # st.dataframe(reviews)
 
 # simulations = conn.query('SELECT * FROM simulations') 
 # st.dataframe(simulations)
