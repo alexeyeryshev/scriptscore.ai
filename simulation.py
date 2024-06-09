@@ -59,7 +59,12 @@ Answer in JSON format, use following structure:
 }}
 """)
 
+synopsis_cta_prompt = PromptTemplate.from_template("""
+Generate synopsis to put on a streaming website for this content. Print it out in JSON format with synopsis key.
+""")
+
 full_prompt = individual_prompt + project_prompt + cta_prompt
+synopsis_prompt = project_prompt + synopsis_cta_prompt
 
 def get_random_persona(demography, seed=None):
     if seed:
@@ -102,12 +107,13 @@ def generate_prompt_input(persona, content):
         **generate_content_prompt_input(content)
     }
 
-def create_simulation_in_db(con, content):
+def create_simulation_in_db(con, content, synopsis):
     simulation = {
         **content,
-        "cast": ",".join(content["cast"])
+        "cast": ",".join(content["cast"]),
+        "synopsis": synopsis["synopsis"]
     }
-    cursor = con.execute(text("INSERT INTO simulations VALUES(NULL, :name, :type, :cast, :budget);"), simulation)
+    cursor = con.execute(text("INSERT INTO simulations VALUES(NULL, :name, :type, :cast, :budget, :synopsis);"), simulation)
     return cursor.lastrowid
 
 def create_persona_in_db(con, persona):
@@ -131,11 +137,14 @@ def create_review_in_db(con, simulation, persona, review):
 
 def simulate(model, con, content, on_simulate_tick, config):
     random_persona_generator = get_random_persona(demography, 42)
-    chain = full_prompt | model
+    review_chain = full_prompt | model
+    synopsis_chain = synopsis_prompt | model
     how_many = config["how_many"]
 
     with con:
-        simulation_id = create_simulation_in_db(con, content)
+        persona = next(random_persona_generator)
+        ai_message = synopsis_chain.invoke(generate_prompt_input(persona, content))
+        simulation_id = create_simulation_in_db(con, content, json.loads(ai_message.content))
         review_ids = []
         
         for i in range(how_many):
@@ -144,7 +153,7 @@ def simulate(model, con, content, on_simulate_tick, config):
             persona_id = create_persona_in_db(con, persona)
             
             prompt_input = generate_prompt_input(persona, content)
-            ai_message = chain.invoke(prompt_input)
+            ai_message = review_chain.invoke(prompt_input)
             review = json.loads(ai_message.content)
             print(review, json.dumps(review))
 

@@ -40,14 +40,14 @@ previous_simulations = conn.query('SELECT * FROM simulations ORDER BY id DESC LI
 if len(previous_simulations):
     st.subheader('📽️ Previous Projects')
 
-last_simulations_len = min(len(previous_simulations), 5)
-for i, col in enumerate(st.columns(last_simulations_len)):
-    with col:
-        simulation = previous_simulations.iloc[i]
-        def on_click(simulation_id):
-            st.session_state['simulation'] = simulation_id
-        simulation_id = simulation['id'].item()
-        st.button(simulation["name"], on_click=on_click, key=simulation_id, kwargs={"simulation_id": simulation_id})
+    last_simulations_len = min(len(previous_simulations), 5)
+    for i, col in enumerate(st.columns(last_simulations_len)):
+        with col:
+            simulation = previous_simulations.iloc[i]
+            def on_click(simulation_id):
+                st.session_state['simulation'] = simulation_id
+            simulation_id = simulation['id'].item()
+            st.button(simulation["name"], on_click=on_click, key=simulation_id, kwargs={"simulation_id": simulation_id})
 
 if simulation_id := st.session_state.get('simulation'):
     simulation = conn.query(f'SELECT * FROM simulations WHERE id = {simulation_id}')
