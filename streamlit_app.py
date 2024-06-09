@@ -20,6 +20,7 @@ st.title('🤖 Predictive Audience Intelligence')
 OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
 conn = st.connection("local_db")
 openai_model_35 = model=ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo-1106", openai_api_key=OPENAI_API_KEY, model_kwargs={"response_format": {"type": "json_object"}},)
+openai_model_4 = model=ChatOpenAI(temperature=0, model_name="gpt-4o", openai_api_key=OPENAI_API_KEY, model_kwargs={"response_format": {"type": "json_object"}},)
 
 with st.expander('About this plartform', expanded=False):
   st.markdown('**What can this app do?**')
@@ -140,10 +141,12 @@ with st.sidebar:
     st.header('Budget')
     budget = st.slider('Budget', 0, 500, 25, 1, format='$%dM', label_visibility='collapsed' )
 
+    model = None
     with st.expander('Advanced configuraiton', expanded=False):
         audience_size = st.number_input('Audience size', min_value=1, max_value=100, value=10)
+        model = st.selectbox('Model', ['GPT-3.5', 'GPT-4.0'], index=0)
 
-    def run_simulation():
+    def run_simulation(model):
         content = {
             "name": title,
             "type": conent_type,
@@ -151,11 +154,13 @@ with st.sidebar:
             "cast": cast,
             "budget": budget
         }
+        print(model)
+        model = openai_model_35 if model == 'GPT-3.5' else openai_model_4
         with conn.session as session:
-            simulation_id = simulate(openai_model_35, session, content, {"how_many": audience_size})
+            simulation_id = simulate(model, session, content, {"how_many": audience_size})
         st.session_state['simulation'] = simulation_id
 
-    st.button('🪄', use_container_width=True, on_click=run_simulation, type="primary")
+    st.button('🪄', use_container_width=True, on_click=run_simulation, kwargs={"model": model}, type="primary")
 
     # Debug only
     with st.expander('Debug information', expanded=True):
