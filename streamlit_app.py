@@ -104,7 +104,7 @@ if simulation_id := st.session_state.get('simulation'):
     col1, col2 = st.columns(2)
     with col1:
         st.subheader('⭐ Average Rating')
-        st.metric('Average Rating', reviews['rating'].mean(), label_visibility='collapsed')
+        st.metric('Average Rating', f'{reviews["rating"].mean():.2f}', label_visibility='collapsed')
     with col2:
         st.subheader('👍 Looking forward?')
         total = reviews['lookingForward'].sum()
