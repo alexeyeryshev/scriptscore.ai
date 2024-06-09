@@ -118,6 +118,51 @@ def generate_prompt_input(persona, content):
         **generate_content_prompt_input(content)
     }
 
+def bootstrap_db(con):
+    with con:
+        con.execute(text('''
+        CREATE TABLE IF NOT EXISTS simulations (
+            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            name TEXT,
+            type TEXT,
+            cast TEXT,
+            budget REAL,
+            synopsis TEXT,
+            poster BLOB
+        )
+        '''))
+
+        con.execute(text('''
+        CREATE TABLE IF NOT EXISTS personas (
+            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            ageStart INTEGER,
+            ageEnd INTEGER,
+            gender TEXT,
+            ethnicity TEXT,
+            location TEXT,
+            profession TEXT,
+            education TEXT,
+            income TEXT
+        )
+        '''))
+
+        con.execute(text('''
+        CREATE TABLE IF NOT EXISTS reviews (
+            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            simulation INTEGER NOT NULL,
+            persona INTEGER NOT NULL,
+            source TEXT NOT NULL,
+            review TEXT,
+            rating REAL,
+            lookingForward INTEGER,
+            
+            FOREIGN KEY (simulation) REFERENCES simulations(ID)
+            FOREIGN KEY (persona) REFERENCES personas(ID)
+        )
+        '''))
+
+        con.commit()
+
 def create_simulation_in_db(con, content, synopsis, poster):
     simulation = {
         **content,

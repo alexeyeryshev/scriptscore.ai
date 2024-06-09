@@ -3,7 +3,7 @@ import streamlit as st
 import altair as alt
 from openai import OpenAI
 
-from simulation import simulate
+from simulation import bootstrap_db, simulate
 
 
 # Page title
@@ -14,6 +14,8 @@ st.title('🤖 Predictive Audience Intelligence')
 OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
 conn = st.connection("local_db")
 openai_client = OpenAI(api_key=OPENAI_API_KEY)
+with conn.session as session:
+    bootstrap_db(session)
 
 with st.expander('About this plartform', expanded=False):
   st.markdown('**What can this app do?**')
