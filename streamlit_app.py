@@ -32,8 +32,21 @@ with st.expander('About this plartform', expanded=False):
     * **Speculate on a Budget**: Estimate the budget, including costs for production, talent, special effects, and other relevant expenses.
     * **Let AI Work Its Magic**: Allow the AI to analyze the data and predict audience sentiment, providing valuable insights at the earliest stages of content creation.
   ''')
-if not st.session_state.get('simulation'):
-    st.session_state['simulation'] = 2
+# if not st.session_state.get('simulation'):
+#     st.session_state['simulation'] = 2
+
+previous_simulations = conn.query('SELECT * FROM simulations ORDER BY id DESC LIMIT 5', ttl=1)
+if len(previous_simulations):
+    st.subheader('📽️ Previous Projects')
+
+last_simulations_len = min(len(previous_simulations), 5)
+for i, col in enumerate(st.columns(last_simulations_len)):
+    with col:
+        simulation = previous_simulations.iloc[i]
+        def on_click(simulation_id):
+            st.session_state['simulation'] = simulation_id
+        simulation_id = simulation['id'].item()
+        st.button(simulation["name"], on_click=on_click, key=simulation_id, kwargs={"simulation_id": simulation_id})
 
 if simulation_id := st.session_state.get('simulation'):
     simulation = conn.query(f'SELECT * FROM simulations WHERE id = {simulation_id}')
@@ -57,8 +70,6 @@ if simulation_id := st.session_state.get('simulation'):
                           LEFT JOIN personas ON reviews.persona = personas.id WHERE simulation = {simulation_id}
                           ''')
     reviews['ageRange'] = reviews['ageStart'].astype(str) + '-' + reviews['ageEnd'].astype(str)
-    # Debug only
-    st.write(f'🔍 Simulation ID: {simulation_id}')
     # st.dataframe(reviews)
 
     # col1, col2 = st.columns(2)
@@ -129,7 +140,7 @@ with st.sidebar:
     st.header('Budget')
     budget = st.slider('Budget', 0, 500, 25, 1, format='$%dM', label_visibility='collapsed' )
 
-    with st.expander('Audience configuraiton', expanded=False):
+    with st.expander('Advanced configuraiton', expanded=False):
         audience_size = st.number_input('Audience size', min_value=1, max_value=100, value=10)
 
     def run_simulation():
@@ -144,8 +155,11 @@ with st.sidebar:
             simulation_id = simulate(openai_model_35, session, content, {"how_many": audience_size})
         st.session_state['simulation'] = simulation_id
 
-    st.button('🪄', use_container_width=True, on_click=run_simulation)
+    st.button('🪄', use_container_width=True, on_click=run_simulation, type="primary")
 
+    # Debug only
+    with st.expander('Debug information', expanded=True):
+        st.write(f'🔍 Simulation: {simulation_id}')
     # # Download example data
     # @st.cache_data
     # def convert_df(input_df):
