@@ -1,13 +1,7 @@
 from langchain_openai import ChatOpenAI
 import streamlit as st
-import pandas as pd
-import numpy as np
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.metrics import mean_squared_error, r2_score
 import altair as alt
-import time
-import zipfile
+from openai import OpenAI
 
 from simulation import simulate
 
@@ -19,8 +13,9 @@ st.title('🤖 Predictive Audience Intelligence')
 # Meta
 OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
 conn = st.connection("local_db")
-openai_model_35 = model=ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo-1106", openai_api_key=OPENAI_API_KEY, model_kwargs={"response_format": {"type": "json_object"}},)
-openai_model_4 = model=ChatOpenAI(temperature=0, model_name="gpt-4o", openai_api_key=OPENAI_API_KEY, model_kwargs={"response_format": {"type": "json_object"}},)
+openai_model_35 = ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo-1106", openai_api_key=OPENAI_API_KEY, model_kwargs={"response_format": {"type": "json_object"}},)
+openai_model_4 = ChatOpenAI(temperature=0, model_name="gpt-4o", openai_api_key=OPENAI_API_KEY, model_kwargs={"response_format": {"type": "json_object"}},)
+openai_client = OpenAI(api_key=OPENAI_API_KEY)
 
 with st.expander('About this plartform', expanded=False):
   st.markdown('**What can this app do?**')
@@ -148,7 +143,7 @@ with st.sidebar:
         audience_size = st.number_input('Audience size', min_value=1, max_value=100, value=10)
         model = st.selectbox('Model', ['GPT-3.5', 'GPT-4.0'], index=0)
 
-    def run_simulation(model):
+    def run_simulation(model, openai_client):
         progress = st.progress(0)
         content = {
             "name": title,
@@ -159,11 +154,11 @@ with st.sidebar:
         }
         model = openai_model_35 if model == 'GPT-3.5' else openai_model_4
         with conn.session as session:
-            simulation_id = simulate(model, session, content, lambda x: progress.progress(x), {"how_many": audience_size})
+            simulation_id = simulate(model, openai_client, session, content, lambda x: progress.progress(x), {"how_many": audience_size})
         st.session_state['simulation'] = simulation_id
         progress.empty()
 
-    st.button('🪄', use_container_width=True, on_click=run_simulation, kwargs={"model": model}, type="primary")
+    st.button('🪄', use_container_width=True, on_click=run_simulation, kwargs={"model": model, "openai_client": openai_client}, type="primary")
 
     # Debug only
     with st.expander('Debug information', expanded=True):

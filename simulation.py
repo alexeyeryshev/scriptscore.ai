@@ -3,6 +3,7 @@ import random
 from sqlalchemy import text
 
 from langchain_core.prompts import PromptTemplate
+import requests
 
 
 file_path = 'demography.json'
@@ -60,7 +61,17 @@ Answer in JSON format, use following structure:
 """)
 
 synopsis_cta_prompt = PromptTemplate.from_template("""
-Generate synopsis to put on a streaming website for this content. Print it out in JSON format with synopsis key.
+Generate synopsis to put on a website or a dvd box for this content.
+Print it out in JSON format with synopsis key.
+""")
+
+poster_generation_prompt = PromptTemplate.from_template("""
+Generate a poster for a cinema content with a synopsis below.
+It's important - do not put text on it at all.
+
+BEGIN synopsis
+{synopsis}
+END synopsis
 """)
 
 full_prompt = individual_prompt + project_prompt + cta_prompt
@@ -107,13 +118,14 @@ def generate_prompt_input(persona, content):
         **generate_content_prompt_input(content)
     }
 
-def create_simulation_in_db(con, content, synopsis):
+def create_simulation_in_db(con, content, synopsis, poster):
     simulation = {
         **content,
         "cast": ",".join(content["cast"]),
-        "synopsis": synopsis["synopsis"]
+        "synopsis": synopsis["synopsis"],
+        "poster": poster, 
     }
-    cursor = con.execute(text("INSERT INTO simulations VALUES(NULL, :name, :type, :cast, :budget, :synopsis);"), simulation)
+    cursor = con.execute(text("INSERT INTO simulations VALUES(NULL, :name, :type, :cast, :budget, :synopsis, :poster);"), simulation)
     return cursor.lastrowid
 
 def create_persona_in_db(con, persona):
@@ -135,7 +147,26 @@ def create_review_in_db(con, simulation, persona, review):
     cursor = con.execute(text("INSERT INTO reviews VALUES(NULL, :simulation, :persona, :source, :review, :rating, :lookingForward)"), data)
     return cursor.lastrowid
 
-def simulate(model, con, content, on_simulate_tick, config):
+def generate_poster(openai_client, synopsis):
+    post_generation_prompt_resolved = poster_generation_prompt.invoke(synopsis["synopsis"])
+    image_response = openai_client.images.generate(
+        model="dall-e-3",
+        prompt = post_generation_prompt_resolved.json(),
+        size = "1024x1024",
+        quality="standard",
+        n=1,
+    )
+    image_url = image_response.data[0].url
+    print(image_url)
+    response = requests.get(image_url)
+    if response.status_code == 200:
+        response = response.content
+    else:
+        raise Exception("Failed to generate poster")
+
+    return response
+
+def simulate(model, openai_client, con, content, on_simulate_tick, config):
     random_persona_generator = get_random_persona(demography, 42)
     review_chain = full_prompt | model
     synopsis_chain = synopsis_prompt | model
@@ -144,14 +175,19 @@ def simulate(model, con, content, on_simulate_tick, config):
     with con:
         persona = next(random_persona_generator)
         ai_message = synopsis_chain.invoke(generate_prompt_input(persona, content))
-        simulation_id = create_simulation_in_db(con, content, json.loads(ai_message.content))
+        synopsis = json.loads(ai_message.content)
+        on_simulate_tick(1 / (how_many + 2))
+
+        poster_bytes = generate_poster(openai_client, synopsis)
+        on_simulate_tick(2 / (how_many + 2))
+
+        simulation_id = create_simulation_in_db(con, content, synopsis, poster_bytes)
         review_ids = []
         
         for i in range(how_many):
             persona = next(random_persona_generator)
             print(persona)
             persona_id = create_persona_in_db(con, persona)
-            
             prompt_input = generate_prompt_input(persona, content)
             ai_message = review_chain.invoke(prompt_input)
             review = json.loads(ai_message.content)
@@ -159,7 +195,7 @@ def simulate(model, con, content, on_simulate_tick, config):
 
             review_id = create_review_in_db(con, simulation_id, persona_id, review)
             review_ids.append(review_id)
-            on_simulate_tick(i / how_many)
+            on_simulate_tick((i + 2) / (how_many + 2))
         
         con.commit()
     
