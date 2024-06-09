@@ -137,14 +137,14 @@ def generate_poster(openai_client, synopsis):
 
     return response
 
-def simulate(model, openai_client, con, content, on_simulate_tick, config):
+def simulate(model, openai_client, session, content, on_simulate_tick, config):
     random_persona_generator = get_random_persona(demography, 42)
     review_chain = full_prompt | model
     synopsis_chain = synopsis_prompt | model
     how_many = config["how_many"]
     skip_poster_generation = config["skip_poster_generation"]
 
-    with con:
+    with session:
         persona = next(random_persona_generator)
         ai_message = synopsis_chain.invoke(generate_prompt_input(persona, content))
         synopsis = json.loads(ai_message.content)
@@ -155,22 +155,22 @@ def simulate(model, openai_client, con, content, on_simulate_tick, config):
             poster_bytes = generate_poster(openai_client, synopsis)
             on_simulate_tick(2 / (how_many + 2))
 
-        simulation_id = create_simulation_in_db(con, content, synopsis, poster_bytes)
+        simulation_id = create_simulation_in_db(session, content, synopsis, poster_bytes)
         review_ids = []
         
         for i in range(how_many):
             persona = next(random_persona_generator)
             print(persona)
-            persona_id = create_persona_in_db(con, generate_demography_prompt_input(persona))
+            persona_id = create_persona_in_db(session, generate_demography_prompt_input(persona))
             prompt_input = generate_prompt_input(persona, content)
             ai_message = review_chain.invoke(prompt_input)
             review = json.loads(ai_message.content)
             print(review, json.dumps(review))
 
-            review_id = create_review_in_db(con, simulation_id, persona_id, review)
+            review_id = create_review_in_db(session, simulation_id, persona_id, review)
             review_ids.append(review_id)
             on_simulate_tick((i + 2) / (how_many + 2))
         
-        con.commit()
+        session.commit()
     
     return simulation_id

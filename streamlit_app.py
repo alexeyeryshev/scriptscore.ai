@@ -13,7 +13,8 @@ st.title('🤖 Predictive Audience Intelligence')
 
 # Meta
 OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
-conn = st.connection("local_db")
+conn = st.connection("sqlite")
+# conn = SqliteConnection("sqlite", mode="local")
 openai_client = OpenAI(api_key=OPENAI_API_KEY)
 with conn.session as session:
     bootstrap_db(session)
