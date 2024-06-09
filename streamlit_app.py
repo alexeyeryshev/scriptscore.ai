@@ -1,3 +1,4 @@
+from langchain_openai import ChatOpenAI
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -16,7 +17,9 @@ st.set_page_config(page_title='ScriptScore.AI', page_icon='🎥')
 st.title('🤖 Predictive Audience Intelligence')
 
 # Meta
+OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
 conn = st.connection("local_db")
+openai_model_35 = model=ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo-1106", openai_api_key=OPENAI_API_KEY, model_kwargs={"response_format": {"type": "json_object"}},)
 
 with st.expander('About this plartform', expanded=False):
   st.markdown('**What can this app do?**')
@@ -30,7 +33,7 @@ with st.expander('About this plartform', expanded=False):
     * **Let AI Work Its Magic**: Allow the AI to analyze the data and predict audience sentiment, providing valuable insights at the earliest stages of content creation.
   ''')
 if not st.session_state.get('simulation'):
-    st.session_state['simulation'] = 1
+    st.session_state['simulation'] = 2
 
 if simulation_id := st.session_state.get('simulation'):
     simulation = conn.query(f'SELECT * FROM simulations WHERE id = {simulation_id}')
@@ -54,6 +57,9 @@ if simulation_id := st.session_state.get('simulation'):
                           LEFT JOIN personas ON reviews.persona = personas.id WHERE simulation = {simulation_id}
                           ''')
     reviews['ageRange'] = reviews['ageStart'].astype(str) + '-' + reviews['ageEnd'].astype(str)
+    # Debug only
+    st.write(f'🔍 Simulation ID: {simulation_id}')
+    # st.dataframe(reviews)
 
     # col1, col2 = st.columns(2)
     # with col1:
@@ -112,15 +118,33 @@ with st.sidebar:
     # Load data
     st.header('ScriptScore.AI', divider='rainbow')
 
+    st.header('Title')
+    title = st.text_input('Title', 'My amazing movie', label_visibility='collapsed')
+    st.header('Type')
+    conent_type = st.selectbox('Type', ['Movie', 'TV Show', 'Documentary', 'Web Series'], label_visibility='collapsed', placeholder='Select the type of content')
     st.header('Script')
-    st.text_area('Script', 'Write your script here', label_visibility='collapsed')
+    script = st.text_area('Script', 'Write your script here', label_visibility='collapsed')
     st.header('Cast')
-    choices = st.multiselect('Cast', ['Tom Cruise', 'Tom Hanks', 'Brad Pitt', 'Leonardo DiCaprio', 'Will Smith', 'Scarlett Johansson', 'Angelina Jolie', 'Jennifer Aniston', 'Julia Roberts', 'Meryl Streep'], label_visibility='collapsed', placeholder='Select your dream cast')
+    cast = st.multiselect('Cast', ['Tom Cruise', 'Tom Hanks', 'Brad Pitt', 'Leonardo DiCaprio', 'Will Smith', 'Scarlett Johansson', 'Angelina Jolie', 'Jennifer Aniston', 'Julia Roberts', 'Meryl Streep'], label_visibility='collapsed', placeholder='Select your dream cast')
     st.header('Budget')
-    st.slider('Budget', 0, 500, 25, 1, format='$%dM', label_visibility='collapsed' )
+    budget = st.slider('Budget', 0, 500, 25, 1, format='$%dM', label_visibility='collapsed' )
 
+    with st.expander('Audience configuraiton', expanded=False):
+        audience_size = st.number_input('Audience size', min_value=1, max_value=100, value=10)
 
-    st.button('🪄', use_container_width=True, on_click=simulate)
+    def run_simulation():
+        content = {
+            "name": title,
+            "type": conent_type,
+            "script": script,
+            "cast": cast,
+            "budget": budget
+        }
+        with conn.session as session:
+            simulation_id = simulate(openai_model_35, session, content, {"how_many": audience_size})
+        st.session_state['simulation'] = simulation_id
+
+    st.button('🪄', use_container_width=True, on_click=run_simulation)
 
     # # Download example data
     # @st.cache_data

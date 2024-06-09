@@ -1,7 +1,8 @@
 import json
 import random
+from sqlalchemy import text
 
-from langchain_core.prompts import PipelinePromptTemplate, PromptTemplate
+from langchain_core.prompts import PromptTemplate
 
 
 file_path = 'demography.json'
@@ -106,14 +107,14 @@ def create_simulation_in_db(con, content):
         **content,
         "cast": ",".join(content["cast"])
     }
-    cursor = con.execute("INSERT INTO simulations VALUES(NULL, :name, :type, :cast, :budget);", simulation)
+    cursor = con.execute(text("INSERT INTO simulations VALUES(NULL, :name, :type, :cast, :budget);"), simulation)
     return cursor.lastrowid
 
 def create_persona_in_db(con, persona):
     data = generate_demography_prompt_input(persona)
-    cursor = con.execute("""
+    cursor = con.execute(text("""
         INSERT INTO personas VALUES (NULL, :ageStart, :ageEnd, :gender, :ethnicity, :location, :profession, :education, :income)
-    """, data)
+    """), data)
     return cursor.lastrowid
 
 def create_review_in_db(con, simulation, persona, review):
@@ -125,7 +126,7 @@ def create_review_in_db(con, simulation, persona, review):
         "rating": review["rating"],
         "lookingForward": review["lookingForward"],
     }
-    cursor = con.execute("INSERT INTO reviews VALUES(NULL, :simulation, :persona, :source, :review, :rating, :lookingForward)", data)
+    cursor = con.execute(text("INSERT INTO reviews VALUES(NULL, :simulation, :persona, :source, :review, :rating, :lookingForward)"), data)
     return cursor.lastrowid
 
 def simulate(model, con, content, config):
@@ -149,3 +150,7 @@ def simulate(model, con, content, config):
 
             review_id = create_review_in_db(con, simulation_id, persona_id, review)
             review_ids.append(review_id)
+        
+        con.commit()
+    
+    return simulation_id
