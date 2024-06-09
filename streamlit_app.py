@@ -19,7 +19,7 @@ openai_client = OpenAI(api_key=OPENAI_API_KEY)
 
 with st.expander('About this plartform', expanded=False):
   st.markdown('**What can this app do?**')
-  st.info('The ASP platform enables entertainment industry professionals to utilize AI for predicting audience sentiment during the initial stages of content creation.')
+  st.info('The ScriptScore platform enables entertainment industry professionals to utilize AI for predicting audience sentiment during the initial stages of content creation.')
 
   st.markdown('**How to use the app?**')
   st.markdown('''
@@ -28,8 +28,6 @@ with st.expander('About this plartform', expanded=False):
     * **Speculate on a Budget**: Estimate the budget, including costs for production, talent, special effects, and other relevant expenses.
     * **Let AI Work Its Magic**: Allow the AI to analyze the data and predict audience sentiment, providing valuable insights at the earliest stages of content creation.
   ''')
-# if not st.session_state.get('simulation'):
-#     st.session_state['simulation'] = 2
 
 previous_simulations = conn.query('SELECT * FROM simulations ORDER BY id DESC LIMIT 5', ttl=1)
 if len(previous_simulations):
@@ -66,6 +64,25 @@ if simulation_id := st.session_state.get('simulation'):
                           LEFT JOIN personas ON reviews.persona = personas.id WHERE simulation = {simulation_id}
                           ''')
     reviews['ageRange'] = reviews['ageStart'].astype(str) + '-' + reviews['ageEnd'].astype(str)
+    locations2Lat = { 
+        "North America" : 37.0902,
+        "Europe": 55.3781,
+        "Asia": 34.0479,
+        "South America": -14.2350,
+        "Africa": -8.7832,
+        "Oceania": -25.2744
+    }
+    locations2Lon = {
+        "North America" : -95.7129,
+        "Europe": -3.4360,
+        "Asia": 100.6197,
+        "South America": -51.9253,
+        "Africa": 34.5085,
+        "Oceania": 133.7751
+    }
+    reviews['lat'] = reviews['location'].apply(lambda x: locations2Lat.get(x, 0))
+    reviews['lon'] = reviews['location'].apply(lambda x: locations2Lon.get(x, 0))
+
     st.subheader("", divider='rainbow')
     st.subheader(simulation['name'].item())
     poster = simulation['poster'].item()
@@ -83,36 +100,54 @@ if simulation_id := st.session_state.get('simulation'):
         st.subheader('🎭 Cast')
         st.write(', '.join(cast))
 
-
-    # col1, col2 = st.columns(2)
-    # with col1:
-    st.subheader('⭐ Average Rating')
-    st.metric('Average Rating', reviews['rating'].mean(), label_visibility='collapsed')
+    # st.map(reviews, size=200000)
+    col1, col2 = st.columns(2)
+    with col1:
+        st.subheader('⭐ Average Rating')
+        st.metric('Average Rating', reviews['rating'].mean(), label_visibility='collapsed')
+    with col2:
+        st.subheader('👍 Looking forward?')
+        total = reviews['lookingForward'].sum()
+        count = reviews['lookingForward'].count()
+        st.metric('Looking forward', f"{total/count * 100}%", label_visibility='collapsed')
 
     def breakdown_char(dim, title):
         age_rating = reviews.groupby(dim)['rating'].mean().reset_index()
-        chart = alt.Chart(age_rating).mark_bar(
+        bars = alt.Chart(age_rating).mark_bar(
             cornerRadiusTopLeft=10,
             cornerRadiusTopRight=10,
-            color='darkviolet'
+            color='#F63366'
         ).encode(
-            x=alt.X(dim, sort=None, title=title, ),
+            x=alt.X(dim, sort=None, title='', ),
             y=alt.Y('rating', title=''),
-            tooltip=[dim, 'rating']
+            tooltip=[alt.Tooltip(dim, title=title), alt.Tooltip('rating', title='Average Rating')]
         ).properties(
             height=200
         ).configure_view(strokeOpacity=0).configure_axis(
             grid=False,
             labelAngle=0
         )
+        chart = bars 
+
         st.altair_chart(chart, use_container_width=True)
     
 
+    st.subheader('📊 Sentiment Breakdown')
+    st.markdown('**Age**')
     breakdown_char("ageRange", "Age Range")
-    breakdown_char("ethnicity", "Ethnicity")
+    # breakdown_char("ethnicity", "Ethnicity")
+    st.markdown('**Ethinicity**')
+    st.dataframe(reviews.groupby('ethnicity')['rating'].mean().reset_index(), hide_index=True, use_container_width=True, column_config={"ethnicity": "Ethnicity", "rating": 
+                                                                                                                                        st.column_config.ProgressColumn("Average Rating", min_value=0, max_value=5, format="%d")})
+    st.markdown('**Gender**')
     breakdown_char("gender", "Gender")
-    breakdown_char("profession", "Profession")
+    st.markdown('**Profession**')
+    # breakdown_char("profession", "Profession")
+    st.dataframe(reviews.groupby('profession')['rating'].mean().reset_index(), hide_index=True, use_container_width=True, column_config={"profession": "Profession", "rating": 
+                                                                                                                                        st.column_config.ProgressColumn("Average Rating", min_value=0, max_value=5, format="%d")})
+    st.markdown('**Education**')
     breakdown_char("education", "Education")
+    st.markdown('**Income**')
     breakdown_char("income", "Income")
 
 
