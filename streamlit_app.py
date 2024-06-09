@@ -161,7 +161,9 @@ with st.sidebar:
     st.header('Title')
     title = st.text_input('Title', 'My amazing movie', label_visibility='collapsed')
     st.header('Type')
-    conent_type = st.selectbox('Type', ['Movie', 'TV Show', 'Documentary', 'Web Series'], label_visibility='collapsed', placeholder='Select the type of content')
+    content_type = st.selectbox('Type', ['Movie', 'TV Show', 'Documentary', 'Web Series'], label_visibility='collapsed', placeholder='Select the type of content')
+    st.header('Genres')
+    genres = st.multiselect('Genres', ['Action', 'Adventure', 'Comedy', 'Drama', 'Fantasy', 'Horror', 'Mystery', 'Romance', 'Sci-Fi', 'Thriller'], label_visibility='collapsed', placeholder='Select the genres')
     st.header('Script')
     script = st.text_area('Script', 'Write your script here', label_visibility='collapsed')
     st.header('Cast')
@@ -180,7 +182,8 @@ with st.sidebar:
         progress = st.progress(0)
         content = {
             "name": title,
-            "type": conent_type,
+            "type": content_type,
+            "genres": genres,
             "script": script,
             "cast": cast,
             "budget": budget

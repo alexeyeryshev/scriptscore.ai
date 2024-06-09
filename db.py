@@ -9,6 +9,7 @@ def bootstrap_db(session: Session):
         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
         name TEXT,
         type TEXT,
+        genres TEXT,
         cast TEXT,
         budget REAL,
         synopsis TEXT,
@@ -48,11 +49,12 @@ def bootstrap_db(session: Session):
 def create_simulation_in_db(session, content, synopsis, poster):
     simulation = {
         **content,
+        "genres": ",".join(content["genres"]),
         "cast": ",".join(content["cast"]),
         "synopsis": synopsis["synopsis"],
         "poster": poster, 
     }
-    cursor = session.execute(text("INSERT INTO simulations VALUES(NULL, :name, :type, :cast, :budget, :synopsis, :poster);"), simulation)
+    cursor = session.execute(text("INSERT INTO simulations VALUES(NULL, :name, :type, :genres, :cast, :budget, :synopsis, :poster);"), simulation)
     return cursor.lastrowid
 
 def create_persona_in_db(session, persona):
