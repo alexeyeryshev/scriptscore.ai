@@ -195,7 +195,7 @@ with st.sidebar:
     st.button('🪄', use_container_width=True, on_click=run_simulation, kwargs={"model": model, "openai_client": openai_client}, type="primary")
 
     # Debug only
-    with st.expander('Debug information', expanded=True):
+    with st.expander('Debug information', expanded=False):
         st.write(f'🔍 Simulation: {simulation_id}')
     # # Download example data
     # @st.cache_data
