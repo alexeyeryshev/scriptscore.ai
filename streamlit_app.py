@@ -147,6 +147,7 @@ with st.sidebar:
         model = st.selectbox('Model', ['GPT-3.5', 'GPT-4.0'], index=0)
 
     def run_simulation(model):
+        progress = st.progress(0)
         content = {
             "name": title,
             "type": conent_type,
@@ -154,11 +155,11 @@ with st.sidebar:
             "cast": cast,
             "budget": budget
         }
-        print(model)
         model = openai_model_35 if model == 'GPT-3.5' else openai_model_4
         with conn.session as session:
-            simulation_id = simulate(model, session, content, {"how_many": audience_size})
+            simulation_id = simulate(model, session, content, lambda x: progress.progress(x), {"how_many": audience_size})
         st.session_state['simulation'] = simulation_id
+        progress.empty()
 
     st.button('🪄', use_container_width=True, on_click=run_simulation, kwargs={"model": model}, type="primary")
 

@@ -129,7 +129,7 @@ def create_review_in_db(con, simulation, persona, review):
     cursor = con.execute(text("INSERT INTO reviews VALUES(NULL, :simulation, :persona, :source, :review, :rating, :lookingForward)"), data)
     return cursor.lastrowid
 
-def simulate(model, con, content, config):
+def simulate(model, con, content, on_simulate_tick, config):
     random_persona_generator = get_random_persona(demography, 42)
     chain = full_prompt | model
     how_many = config["how_many"]
@@ -138,7 +138,7 @@ def simulate(model, con, content, config):
         simulation_id = create_simulation_in_db(con, content)
         review_ids = []
         
-        for _ in range(how_many):
+        for i in range(how_many):
             persona = next(random_persona_generator)
             print(persona)
             persona_id = create_persona_in_db(con, persona)
@@ -150,6 +150,7 @@ def simulate(model, con, content, config):
 
             review_id = create_review_in_db(con, simulation_id, persona_id, review)
             review_ids.append(review_id)
+            on_simulate_tick(i / how_many)
         
         con.commit()
     
