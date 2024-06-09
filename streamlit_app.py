@@ -78,6 +78,11 @@ if simulation_id := st.session_state.get('simulation'):
     else:
         st.write(simulation['synopsis'].item())
 
+    cast = simulation['cast'].item().split(',')
+    if len(cast) and cast[0] != '':
+        st.subheader('🎭 Cast')
+        st.write(', '.join(cast))
+
 
     # col1, col2 = st.columns(2)
     # with col1:
