@@ -16,7 +16,7 @@ st.title('🤖 Predictive Audience Intelligence')
 # Meta
 conn = st.connection("local_db")
 
-with st.expander('About this plartform', expanded=True):
+with st.expander('About this plartform', expanded=False):
   st.markdown('**What can this app do?**')
   st.info('The ASP platform enables entertainment industry professionals to utilize AI for predicting audience sentiment during the initial stages of content creation.')
 
@@ -27,9 +27,72 @@ with st.expander('About this plartform', expanded=True):
     * **Speculate on a Budget**: Estimate the budget, including costs for production, talent, special effects, and other relevant expenses.
     * **Let AI Work Its Magic**: Allow the AI to analyze the data and predict audience sentiment, providing valuable insights at the earliest stages of content creation.
   ''')
+if not st.session_state.get('simulation'):
+    st.session_state['simulation'] = 1
 
-simulations = conn.query('SELECT * FROM simulations') 
-st.dataframe(simulations)
+if simulation_id := st.session_state.get('simulation'):
+    simulation = conn.query(f'SELECT * FROM simulations WHERE id = {simulation_id}')
+    reviews = conn.query(f'''
+                          SELECT 
+                            reviews.id, 
+                            reviews.simulation, 
+                            reviews.persona, 
+                            reviews.review, 
+                            reviews.rating, 
+                            reviews.lookingForward,
+                            personas.ageStart,
+                            personas.ageEnd,
+                            personas.gender,
+                            personas.ethnicity,
+                            personas.location,
+                            personas.profession,
+                            personas.education,
+                            personas.income
+                          FROM reviews 
+                          LEFT JOIN personas ON reviews.persona = personas.id WHERE simulation = {simulation_id}
+                          ''')
+    reviews['ageRange'] = reviews['ageStart'].astype(str) + '-' + reviews['ageEnd'].astype(str)
+
+    # col1, col2 = st.columns(2)
+    # with col1:
+    st.subheader('⭐ Average Rating')
+    st.metric('Average Rating', reviews['rating'].mean(), label_visibility='collapsed')
+
+    age_rating = reviews.groupby('ageRange')['rating'].mean().reset_index()
+    chart = alt.Chart(age_rating).mark_bar(
+        cornerRadiusTopLeft=10,
+        cornerRadiusTopRight=10,
+        color='darkviolet'
+    ).encode(
+        x=alt.X('ageRange', sort=None, title='Age Range', ),
+        y=alt.Y('rating', title=''),
+        tooltip=['ageRange', 'rating']
+    ).properties(
+    ).configure_view(strokeOpacity=0).configure_axis(
+        grid=False,
+        labelAngle=0
+    )
+    st.altair_chart(chart, use_container_width=True)
+
+    # with col2:
+    #     st.subheader('👍 Looking forward?')
+    #     st.metric('Looking forward to watch it?', f'{reviews["lookingForward"].value_counts().get(1, 0) * 100} %', label_visibility="collapsed")
+
+    #     looking_forward = reviews.groupby('ageRange')['lookingForward'].mean().reset_index()
+    #     chart = alt.Chart(looking_forward).mark_bar().encode(
+    #         x=alt.X('ageRange', sort=None, title='Age Range'),
+    #         y=alt.Y('lookingForward'),
+    #         tooltip=['ageRange', 'lookingForward']
+    #     ).properties(
+    #     )
+    #     st.altair_chart(chart)
+
+    # break down by age bar chart
+
+    st.dataframe(reviews)
+
+# simulations = conn.query('SELECT * FROM simulations') 
+# st.dataframe(simulations)
 
 # Sidebar for accepting input parameters
 with st.sidebar:
