@@ -1,10 +1,9 @@
 import json
 from sqlalchemy import text
 from streamlit.connections import BaseConnection
-import sqlitecloud
-import sqlite3
+from sqlalchemy.orm import Session
 
-def bootstrap_db(session):
+def bootstrap_db(session: Session):
     session.execute(text('''
     CREATE TABLE IF NOT EXISTS simulations (
         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
