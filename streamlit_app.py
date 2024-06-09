@@ -71,7 +71,9 @@ if simulation_id := st.session_state.get('simulation'):
                           LEFT JOIN personas ON reviews.persona = personas.id WHERE simulation = {simulation_id}
                           ''')
     reviews['ageRange'] = reviews['ageStart'].astype(str) + '-' + reviews['ageEnd'].astype(str)
-    # st.dataframe(reviews)
+    st.subheader("", divider='rainbow')
+    st.subheader(simulation['name'].item())
+    st.write(simulation['synopsis'].item())
 
     # col1, col2 = st.columns(2)
     # with col1:
