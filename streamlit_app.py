@@ -30,6 +30,7 @@ with st.expander('About this plartform', expanded=False):
     * **Speculate on a Budget**: Estimate the budget, including costs for production, talent, special effects, and other relevant expenses.
     * **Let AI Work Its Magic**: Allow the AI to analyze the data and predict audience sentiment, providing valuable insights at the earliest stages of content creation.
   ''')
+  st.warning('Unfortunately, this app runs on a commodity server and may not be able to handle large-scale simulations. Please be patient and considerate of other users.')
 
 previous_simulations = conn.query('SELECT * FROM simulations ORDER BY id DESC LIMIT 5', ttl=1)
 if len(previous_simulations):
