@@ -1,6 +1,7 @@
 import json
 from sqlalchemy import Column, Float, ForeignKey, Integer, LargeBinary, MetaData, String, Table, Text, text
 from streamlit.connections import SQLConnection
+from sqlalchemy.dialects.mysql import MEDIUMBLOB
 
 def create_tables(engine):
     meta = MetaData()
@@ -14,7 +15,7 @@ def create_tables(engine):
         Column('cast', String(255)),
         Column('budget', Float(10,2)),
         Column('synopsis', Text),
-        Column('poster', LargeBinary)
+        Column('poster', MEDIUMBLOB)
     )
     
     personas = Table(

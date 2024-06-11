@@ -1,0 +1,11 @@
+id,ageStart,ageEnd,gender,ethnicity,location,profession,education,income
+1,13,19,Non-binary,Native American,Africa,Professional Critic,Self-taught,Middle Income
+2,13,19,Female,Hispanic/Latino,Europe,Casual Moviegoer,Self-taught,High Income
+3,13,19,Non-binary,Caucasian,Oceania,Literature Teacher,Self-taught,Middle Income
+4,20,35,Male,Mixed race,Asia,Blogger,Bachelor's Degree,High Income
+5,51,70,Male,Asian,Europe,Casual Moviegoer,Master's Degree,Low Income
+6,13,19,Male,Hispanic/Latino,Asia,Industry Professional,Self-taught,Middle Income
+7,13,19,Non-binary,African American,Africa,Professional Critic,Doctorate,Low Income
+8,35,50,Non-binary,Mixed race,Asia,Medical Professional,Bachelor's Degree,High Income
+9,13,19,Female,Native American,Europe,YouTuber,High School,Low Income
+10,13,19,Male,Asian,South America,Literature Teacher,Master's Degree,Low Income
