@@ -13,6 +13,7 @@ def create_tables(engine):
         Column('type', String(255)),
         Column('genres', String(1024)),
         Column('cast', String(4096)),
+        Column('script', Text),
         Column('budget', Float(10,2)),
         Column('synopsis', Text),
         Column('poster', MEDIUMBLOB)
@@ -46,13 +47,14 @@ def create_tables(engine):
 
 def bootstrap_db(conn: SQLConnection, local = True):
     if local:
-        with conn.session() as session:
+        with conn.session as session:
             session.execute(text('''
             CREATE TABLE IF NOT EXISTS simulations (
                 id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                 name TEXT,
                 type TEXT,
                 genres TEXT,
+                script TEXT,
                 cast TEXT,
                 budget REAL,
                 synopsis TEXT,
@@ -97,10 +99,11 @@ def create_simulation_in_db(session, content, synopsis, poster):
         **content,
         "genres": ",".join(content["genres"]),
         "cast": ",".join(content["cast"]),
+        "script": content["script"],
         "synopsis": synopsis["synopsis"],
         "poster": poster, 
     }
-    cursor = session.execute(text("INSERT INTO simulations VALUES(NULL, :name, :type, :genres, :cast, :budget, :synopsis, :poster);"), simulation)
+    cursor = session.execute(text("INSERT INTO simulations VALUES(NULL, :name, :type, :genres, :cast, :script, :budget, :synopsis, :poster);"), simulation)
     return cursor.lastrowid
 
 def create_persona_in_db(session, persona):
