@@ -11,8 +11,8 @@ def create_tables(engine):
         Column('id', Integer, primary_key=True, autoincrement=True, nullable=False),
         Column('name', String(255)),
         Column('type', String(255)),
-        Column('genres', String(255)),
-        Column('cast', String(255)),
+        Column('genres', String(1024)),
+        Column('cast', String(4096)),
         Column('budget', Float(10,2)),
         Column('synopsis', Text),
         Column('poster', MEDIUMBLOB)
@@ -36,7 +36,7 @@ def create_tables(engine):
         Column('id', Integer, primary_key=True, autoincrement=True, nullable=False),
         Column('simulation', Integer, ForeignKey('simulations.id'), nullable=False),
         Column('persona', Integer, ForeignKey('personas.id'), nullable=False),
-        Column('source', String(255), nullable=False),
+        Column('source', Text, nullable=False),
         Column('review', Text),
         Column('rating', Float(3,2)),
         Column('lookingForward', Integer)
