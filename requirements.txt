@@ -5,4 +5,4 @@ altair>=4.0
 langchain
 langchain_openai
 sqlalchemy
-sqlitecloud
+PyMySQL[rsa]

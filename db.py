@@ -1,50 +1,95 @@
 import json
-from sqlalchemy import text
-from streamlit.connections import BaseConnection
-from sqlalchemy.orm import Session
+from sqlalchemy import Column, Float, ForeignKey, Integer, LargeBinary, MetaData, String, Table, Text, text
+from streamlit.connections import SQLConnection
 
-def bootstrap_db(session: Session):
-    session.execute(text('''
-    CREATE TABLE IF NOT EXISTS simulations (
-        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-        name TEXT,
-        type TEXT,
-        genres TEXT,
-        cast TEXT,
-        budget REAL,
-        synopsis TEXT,
-        poster BLOB
+def create_tables(engine):
+    meta = MetaData()
+    
+    simulations = Table(
+        'simulations', meta,
+        Column('id', Integer, primary_key=True, autoincrement=True, nullable=False),
+        Column('name', String(255)),
+        Column('type', String(255)),
+        Column('genres', String(255)),
+        Column('cast', String(255)),
+        Column('budget', Float(10,2)),
+        Column('synopsis', Text),
+        Column('poster', LargeBinary)
     )
-    '''))
+    
+    personas = Table(
+        'personas', meta,
+        Column('id', Integer, primary_key=True, autoincrement=True, nullable=False),
+        Column('ageStart', Integer),
+        Column('ageEnd', Integer),
+        Column('gender', String(50)),
+        Column('ethnicity', String(255)),
+        Column('location', String(255)),
+        Column('profession', String(255)),
+        Column('education', String(255)),
+        Column('income', String(255))
+    )
+    
+    reviews = Table(
+        'reviews', meta,
+        Column('id', Integer, primary_key=True, autoincrement=True, nullable=False),
+        Column('simulation', Integer, ForeignKey('simulations.id'), nullable=False),
+        Column('persona', Integer, ForeignKey('personas.id'), nullable=False),
+        Column('source', String(255), nullable=False),
+        Column('review', Text),
+        Column('rating', Float(3,2)),
+        Column('lookingForward', Integer)
+    )
+    
+    meta.create_all(engine)
 
-    session.execute(text('''
-    CREATE TABLE IF NOT EXISTS personas (
-        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-        ageStart INTEGER,
-        ageEnd INTEGER,
-        gender TEXT,
-        ethnicity TEXT,
-        location TEXT,
-        profession TEXT,
-        education TEXT,
-        income TEXT
-    )
-    '''))
+def bootstrap_db(conn: SQLConnection, local = True):
+    if local:
+        with conn.session() as session:
+            session.execute(text('''
+            CREATE TABLE IF NOT EXISTS simulations (
+                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                name TEXT,
+                type TEXT,
+                genres TEXT,
+                cast TEXT,
+                budget REAL,
+                synopsis TEXT,
+                poster BLOB
+            )
+            '''))
 
-    session.execute(text('''
-    CREATE TABLE IF NOT EXISTS reviews (
-        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-        simulation INTEGER NOT NULL,
-        persona INTEGER NOT NULL,
-        source TEXT NOT NULL,
-        review TEXT,
-        rating REAL,
-        lookingForward INTEGER,
-        
-        FOREIGN KEY (simulation) REFERENCES simulations(ID)
-        FOREIGN KEY (persona) REFERENCES personas(ID)
-    )
-    '''))
+            session.execute(text('''
+            CREATE TABLE IF NOT EXISTS personas (
+                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                ageStart INTEGER,
+                ageEnd INTEGER,
+                gender TEXT,
+                ethnicity TEXT,
+                location TEXT,
+                profession TEXT,
+                education TEXT,
+                income TEXT
+            )
+            '''))
+
+            session.execute(text('''
+            CREATE TABLE IF NOT EXISTS reviews (
+                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                simulation INTEGER NOT NULL,
+                persona INTEGER NOT NULL,
+                source TEXT NOT NULL,
+                review TEXT,
+                rating REAL,
+                lookingForward INTEGER,
+                
+                FOREIGN KEY (simulation) REFERENCES simulations(ID)
+                FOREIGN KEY (persona) REFERENCES personas(ID)
+            )
+            '''))
+    else:
+        create_tables(conn.engine)
+
 
 def create_simulation_in_db(session, content, synopsis, poster):
     simulation = {
