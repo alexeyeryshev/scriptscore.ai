@@ -13,11 +13,13 @@ st.title('🤖 Predictive Audience Intelligence')
 
 # Meta
 OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
-# conn = st.connection("sqlite")
-# bootstrap_db(conn, local=True)
-conn = st.connection("mysqldo")
-bootstrap_db(conn, local=False)
 openai_client = OpenAI(api_key=OPENAI_API_KEY)
+if st.secrets["local"] == "true":
+    conn = st.connection("sqlite")
+    bootstrap_db(conn, local=True)
+else:
+    conn = st.connection("mysqldo")
+    bootstrap_db(conn, local=False)
 
 with st.expander('About this plartform', expanded=False):
   st.markdown('**What can this app do?**')
@@ -107,7 +109,7 @@ if simulation_id := st.session_state.get('simulation'):
     col1, col2 = st.columns(2)
     with col1:
         st.subheader('⭐ Average Rating')
-        st.metric('Average Rating', f'{reviews["rating"].mean():.2f}', label_visibility='collapsed')
+        st.metric('Average Rating', f'{reviews["rating"].mean():.2f} / 5', label_visibility='collapsed')
     with col2:
         st.subheader('👍 Looking forward?')
         total = reviews['lookingForward'].sum()
@@ -175,7 +177,7 @@ with st.sidebar:
     model = None
     with st.expander('Advanced configuraiton', expanded=False):
         skip_poster_generation = st.checkbox('Skip poster generation', value=False)
-        audience_size = st.number_input('Audience size', min_value=1, max_value=100, value=10)
+        audience_size = st.number_input('Audience size', min_value=1, max_value=30, value=10)
         model = st.selectbox('Model', ['GPT-3.5', 'GPT-4.0'], index=0)
         temperature = st.slider('Temperature', 0.0, 1.0, 0.2, 0.1)
 
