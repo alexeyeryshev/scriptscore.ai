@@ -123,16 +123,3 @@ def create_review_in_db(session, simulation, persona, review):
     }
     cursor = session.execute(text("INSERT INTO reviews VALUES(NULL, :simulation, :persona, :source, :review, :rating, :lookingForward)"), data)
     return cursor.lastrowid
-
-# class SqliteConnection(BaseConnection):
-#     def _connect(self, **kwargs):
-#         if 'mode' in self._secrets:
-#             mode = kwargs.pop('mode')
-#             if mode == 'local':
-#                 url = self._secrets['local_url']
-#                 return sqlite3.connect(url)
-#             else:
-#                 url = self._secrets['cloud_url']
-#                 return sqlitecloud.connect(url)
-#         else:
-#             raise Exception("mode is required in the connection secrets")
